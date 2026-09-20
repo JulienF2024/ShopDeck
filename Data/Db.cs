@@ -7,6 +7,11 @@ namespace ShopDeck.Data;
 
 public class Db
 {
+    // palier de schema courant. Tout l'etat actuel = 1 (migrations additives/idempotentes de Init()).
+    // A incrementer + ajouter un bloc dans MigrateSchema() a la 1re migration NON-additive (rename/retype colonne,
+    // transfo de donnees one-shot). C'est ce qui rend un saut v0.1->v0.3 sur = les paliers manquants se rejouent une fois, dans l'ordre.
+    public const long SchemaVersion = 1;
+
     private readonly string _connStr;
 
     public Db(string dbPath)
@@ -126,6 +131,65 @@ CREATE TABLE IF NOT EXISTS folders (
         // idempotent: on ignore l'erreur si la colonne existe deja (pas de IF NOT EXISTS sur ADD COLUMN en SQLite)
         AddColumnIfMissing(c, "doc_machine", "folder", "TEXT");
         AddColumnIfMissing(c, "doc_machine", "title_override", "TEXT");
+
+        StampAndMigrate(c);
+        RepairFtsIfDesynced(c);
+    }
+
+    // estampille les cles existantes (jamais versionnees -> user_version=0) au palier courant,
+    // et rejoue en boucle les migrations manquantes dans l'ordre (skip de version sur).
+    private static void StampAndMigrate(SqliteConnection c)
+    {
+        long v = ReadUserVersion(c);
+        // v==0 = cle vierge OU cle pre-versioning: son schema correspond deja au palier 1 (Init() vient de le garantir)
+        if (v == 0) { WriteUserVersion(c, 1); v = 1; }
+
+        while (v < SchemaVersion)
+        {
+            using var tx = c.BeginTransaction();
+            MigrateSchema(c, tx, v + 1);   // applique le palier v+1
+            tx.Commit();
+            v++;
+            WriteUserVersion(c, v);
+        }
+    }
+
+    // chaque case = migration NON-additive du palier precedent vers `to`. Idempotence NON requise ici:
+    // user_version garantit qu'un palier ne se rejoue jamais. Ajouter les cases au fur et a mesure.
+    private static void MigrateSchema(SqliteConnection c, SqliteTransaction tx, long to)
+    {
+        switch (to)
+        {
+            // case 2: exemple futur -> ALTER/UPDATE/transfo one-shot ici
+            default: break;
+        }
+    }
+
+    private static long ReadUserVersion(SqliteConnection c)
+    {
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "PRAGMA user_version";
+        return Convert.ToInt64(cmd.ExecuteScalar());
+    }
+
+    private static void WriteUserVersion(SqliteConnection c, long v)
+    {
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = $"PRAGMA user_version = {v}";   // PRAGMA n'accepte pas de parametre lie
+        cmd.ExecuteNonQuery();
+    }
+
+    // FTS5 externe (content='docs'): les triggers ne peuplent que les futurs INSERT/UPDATE.
+    // Si la table a ete recreee vide (ou desynchronisee), la recherche renvoie du vide SANS erreur -> on rebuild.
+    private static void RepairFtsIfDesynced(SqliteConnection c)
+    {
+        long docs, fts;
+        using (var a = c.CreateCommand()) { a.CommandText = "SELECT COUNT(*) FROM docs"; docs = Convert.ToInt64(a.ExecuteScalar()); }
+        using (var b = c.CreateCommand()) { b.CommandText = "SELECT COUNT(*) FROM docs_fts"; fts = Convert.ToInt64(b.ExecuteScalar()); }
+        if (docs == fts) return;
+        using var rb = c.CreateCommand();
+        rb.CommandText = "INSERT INTO docs_fts(docs_fts) VALUES('rebuild')";
+        rb.ExecuteNonQuery();
     }
 
     private static void AddColumnIfMissing(SqliteConnection c, string table, string col, string type)
