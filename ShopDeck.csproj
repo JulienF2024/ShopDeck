@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ShopDeck</AssemblyName>
+    <Product>ShopDeck</Product>
+    <Company>Julien Forget</Company>
+    <AssemblyTitle>ShopDeck</AssemblyTitle>
+    <RootNamespace>ShopDeck</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>793f.ico</ApplicationIcon>
+    <!-- publish self-contained: le runtime .NET est dans l'exe, rien a installer sur les PC compagnie -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <!-- les index de la flotte voyagent avec l'exe (dossier data a cote du binaire) -->
+  <ItemGroup>
+    <Content Include="..\data\equipment_fleet.json" Link="data\equipment_fleet.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\data\schematics_index.json" Link="data\schematics_index.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
+

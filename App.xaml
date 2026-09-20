@@ -1,0 +1,82 @@
+<Application x:Class="ShopDeck.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!-- palette theme clair -->
+        <SolidColorBrush x:Key="Bg"        Color="#F5F6F8"/>
+        <SolidColorBrush x:Key="Surface"   Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="Rail"      Color="#EEF0F3"/>
+        <SolidColorBrush x:Key="Border"    Color="#DADCE0"/>
+        <SolidColorBrush x:Key="Text"      Color="#1F2328"/>
+        <SolidColorBrush x:Key="TextDim"   Color="#5B6470"/>
+        <SolidColorBrush x:Key="Accent"    Color="#2D6CDF"/>
+        <SolidColorBrush x:Key="AccentSoft" Color="#E4ECFB"/>
+
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="Background" Value="{StaticResource Bg}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+        </Style>
+
+        <!-- bouton du rail vertical -->
+        <Style x:Key="RailButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                Height="64" Width="64" Margin="0,2" CornerRadius="8">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{TemplateBinding Tag}" FontSize="22"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" FontSize="10"
+                                           Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource AccentSoft}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#E1E4E9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- bouton outil du rail (pas d'etat coche, meme look que RailButton) -->
+        <Style x:Key="RailTool" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                Height="64" Width="64" Margin="0,2" CornerRadius="8">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{TemplateBinding Tag}" FontSize="22"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{TemplateBinding Content}" FontSize="10"
+                                           Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#E1E4E9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource AccentSoft}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>

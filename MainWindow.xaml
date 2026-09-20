@@ -1,0 +1,49 @@
+<Window x:Class="ShopDeck.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="clr-namespace:ShopDeck.Views"
+        Title="ShopDeck" Height="820" Width="1280"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="76"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- rail vertical -->
+        <Border Grid.Column="0" Background="{StaticResource Rail}"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="0,10">
+                <!-- outils epingles en bas du rail -->
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Button x:Name="RailSnip" Style="{StaticResource RailTool}"
+                            Tag="✂" Content="Capture"
+                            ToolTip="Capture d'écran (Win+Shift+S)"
+                            Click="Snip_Click"/>
+                </StackPanel>
+                <StackPanel>
+                    <RadioButton x:Name="RailDocs" Style="{StaticResource RailButton}"
+                                 Tag="📚" Content="Docs" IsChecked="True"
+                                 Checked="Rail_Checked"/>
+                    <RadioButton x:Name="RailProgs" Style="{StaticResource RailButton}"
+                                 Tag="⚙" Content="Progs"
+                                 Checked="Rail_Checked"/>
+                    <RadioButton x:Name="RailFiles" Style="{StaticResource RailButton}"
+                                 Tag="🗂" Content="Fichiers"
+                                 Checked="Rail_Checked"/>
+                    <RadioButton x:Name="RailPing" Style="{StaticResource RailButton}"
+                                 Tag="📡" Content="Ping"
+                                 Checked="Rail_Checked"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- zone de contenu: une section visible a la fois, chacune garde ses onglets -->
+        <Grid Grid.Column="1">
+            <v:DocumentationView x:Name="ViewDocs"/>
+            <v:ProgramsView x:Name="ViewProgs" Visibility="Collapsed"/>
+            <v:FilesView x:Name="ViewFiles" Visibility="Collapsed"/>
+            <v:PingView x:Name="ViewPing" Visibility="Collapsed"/>
+        </Grid>
+    </Grid>
+</Window>

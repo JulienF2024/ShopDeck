@@ -1,0 +1,22 @@
+# Build artifacts .NET
+bin/
+obj/
+
+# Publish self-contained (gros, regenere par dotnet publish)
+publish/
+*.publish/
+
+# VS / Rider
+.vs/
+.idea/
+*.user
+
+# DB et data runtime (JAMAIS versionner la base ni les PDF)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+data/*.sqlite
+
+# Logs / temp
+*.log
+*.tmp
