@@ -14,6 +14,7 @@ public class ProgramsView : UserControl
         Content = _tabs;
         var home = new LauncherHome();
         home.Launch += LaunchEntry;
+        home.OpenUpdate += () => _tabs.OpenOrFocus("update", "Mise à jour", "⬆", () => new UpdateView());
         _tabs.AddPinned("home", "Lanceur", "🏠", home);
     }
 

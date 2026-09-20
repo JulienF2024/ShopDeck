@@ -15,6 +15,7 @@ public class LauncherHome : UserControl
 {
     private readonly StackPanel _list;
     public event Action<LauncherEntry>? Launch;
+    public event Action? OpenUpdate;
 
     public LauncherHome()
     {
@@ -24,6 +25,12 @@ public class LauncherHome : UserControl
         var add = new Button { Content = "➕ Ajouter un programme", Padding = new Thickness(12, 6, 12, 6), Cursor = System.Windows.Input.Cursors.Hand };
         add.Click += (_, _) => AddDialog();
         bar.Children.Add(add);
+
+        // acces a l'onglet Mise a jour (compare version locale vs GitHub Release)
+        var upd = new Button { Content = "⬆ Mise à jour", Padding = new Thickness(12, 6, 12, 6), Margin = new Thickness(8, 0, 0, 0), Cursor = System.Windows.Input.Cursors.Hand };
+        upd.Click += (_, _) => OpenUpdate?.Invoke();
+        bar.Children.Add(upd);
+
         DockPanel.SetDock(bar, Dock.Top);
         root.Children.Add(bar);
 
