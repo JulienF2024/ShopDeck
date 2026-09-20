@@ -40,10 +40,33 @@
 
         <!-- zone de contenu: une section visible a la fois, chacune garde ses onglets -->
         <Grid Grid.Column="1">
-            <v:DocumentationView x:Name="ViewDocs"/>
-            <v:ProgramsView x:Name="ViewProgs" Visibility="Collapsed"/>
-            <v:FilesView x:Name="ViewFiles" Visibility="Collapsed"/>
-            <v:PingView x:Name="ViewPing" Visibility="Collapsed"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- bandeau MAJ: cache au demarrage, apparait seulement si une release plus recente existe.
+                 non-bloquant: le check tourne en tache de fond, offline = rien ne s'affiche -->
+            <Border x:Name="UpdateBar" Grid.Row="0" Visibility="Collapsed"
+                    Background="#E4ECFB" BorderBrush="{StaticResource Accent}" BorderThickness="0,0,0,1">
+                <DockPanel Margin="14,8">
+                    <Button x:Name="BtnUpdateLater" DockPanel.Dock="Right" Content="Plus tard"
+                            Padding="10,4" Margin="6,0,0,0" Click="UpdateLater_Click"
+                            Background="Transparent" BorderBrush="{StaticResource Border}"/>
+                    <Button x:Name="BtnUpdateNow" DockPanel.Dock="Right" Content="Mettre a jour"
+                            Padding="12,4" Click="UpdateNow_Click"
+                            Background="{StaticResource Accent}" Foreground="White" BorderThickness="0"/>
+                    <TextBlock x:Name="UpdateText" VerticalAlignment="Center" Foreground="{StaticResource Text}"
+                               Text="Une nouvelle version est disponible."/>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <v:DocumentationView x:Name="ViewDocs"/>
+                <v:ProgramsView x:Name="ViewProgs" Visibility="Collapsed"/>
+                <v:FilesView x:Name="ViewFiles" Visibility="Collapsed"/>
+                <v:PingView x:Name="ViewPing" Visibility="Collapsed"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

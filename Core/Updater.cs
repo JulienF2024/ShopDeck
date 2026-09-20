@@ -18,6 +18,9 @@ public class Updater
 
     public record ReleaseInfo(Version Version, string Tag, string Notes, string ExeUrl, long Size);
 
+    // retenue entre le download et l'apply pour ecrire le flag "Quoi de neuf"
+    private ReleaseInfo? _stagedRelease;
+
     public Version LocalVersion =>
         Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0, 0);
 
@@ -73,6 +76,48 @@ public class Updater
 
     public bool IsNewer(ReleaseInfo rel) => rel.Version > LocalVersion;
 
+    // flag ecrit AVANT le redemarrage: au prochain lancement, si la version installee == Version du flag,
+    // on affiche la page "Quoi de neuf" une seule fois. Stocke dans data\ (persiste, hors exe remplace).
+    public record PendingNews(string Version, string Tag, string Notes);
+
+    private static string NewsFlagPath()
+    {
+        var exePath = Environment.ProcessPath ?? Assembly.GetEntryAssembly()!.Location;
+        var dir = Path.GetDirectoryName(exePath)!;
+        var dataDir = Path.Combine(dir, "data");
+        Directory.CreateDirectory(dataDir);
+        return Path.Combine(dataDir, "update_pending.json");
+    }
+
+    private void WriteNewsFlag(ReleaseInfo rel)
+    {
+        try
+        {
+            var news = new PendingNews(rel.Version.ToString(3), rel.Tag, rel.Notes);
+            File.WriteAllText(NewsFlagPath(), JsonSerializer.Serialize(news));
+        }
+        catch { /* le flag est un bonus, jamais bloquant */ }
+    }
+
+    // appele au demarrage: retourne les notes SI une MAJ vient d'etre appliquee (version installee == flag),
+    // puis efface le flag. null sinon (rien a montrer). 100% offline.
+    public PendingNews? ConsumePendingNews()
+    {
+        try
+        {
+            var path = NewsFlagPath();
+            if (!File.Exists(path)) return null;
+            var news = JsonSerializer.Deserialize<PendingNews>(File.ReadAllText(path));
+            File.Delete(path);
+            if (news == null) return null;
+            // on ne montre que si l'exe qui tourne EST bien la version annoncee (MAJ reussie)
+            if (Version.TryParse(Normalize(news.Version), out var v) && v == LocalVersion)
+                return news;
+        }
+        catch { }
+        return null;
+    }
+
     // telecharge le nouvel exe a cote de l'actuel puis lance un .bat relais qui:
     // attend la fermeture -> remplace l'exe -> relance. L'exe ne peut pas s'ecraser en tournant.
     public async Task<string> DownloadAndStageAsync(ReleaseInfo rel, IProgress<double>? progress = null)
@@ -81,6 +126,7 @@ public class Updater
             ?? throw new InvalidOperationException("Chemin de l'exe introuvable.");
         var dir = Path.GetDirectoryName(exePath)!;
         var newExe = Path.Combine(dir, "ShopDeck.new.exe");
+        _stagedRelease = rel;
 
         using var http = new HttpClient();
         http.DefaultRequestHeaders.UserAgent.ParseAdd("ShopDeck-Updater");
@@ -117,6 +163,9 @@ public class Updater
         var bak = Path.Combine(dir, "ShopDeck.old.exe");
         var bat = Path.Combine(dir, "_update.bat");
         var pid = Environment.ProcessId;
+
+        // le flag doit exister AVANT le remplacement: consomme au demarrage de la nouvelle version
+        WriteNewsFlag(_stagedRelease!);
 
         // /f /pid attend proprement; ping = delai sans dependre de timeout.exe (absent sur certains PC compagnie)
         var script = $@"@echo off

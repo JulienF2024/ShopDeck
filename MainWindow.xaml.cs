@@ -3,15 +3,77 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using ShopDeck.Core;
 
 namespace ShopDeck;
 
 public partial class MainWindow : Window
 {
+    private readonly Updater _updater = new();
+    private Updater.ReleaseInfo? _pendingRelease;
+
     public MainWindow()
     {
         InitializeComponent();
+        // le check tourne apres l'affichage de la fenetre: jamais bloquant, offline = ignore en silence
+        Loaded += async (_, _) =>
+        {
+            ShowWhatsNewIfUpdated();          // 100% local, avant tout appel reseau
+            await CheckForUpdatesAsync();
+        };
     }
+
+    // si une MAJ vient d'etre appliquee (flag ecrit par l'updater + version confirmee), montre la page une fois
+    private void ShowWhatsNewIfUpdated()
+    {
+        try
+        {
+            var news = _updater.ConsumePendingNews();
+            if (news == null) return;
+            var win = new Views.WhatsNewWindow(news) { Owner = this };
+            win.ShowDialog();
+        }
+        catch { /* jamais bloquant */ }
+    }
+
+    private async System.Threading.Tasks.Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var rel = await _updater.CheckLatestAsync();
+            // rel null = pas de reseau / GitHub injoignable / pas de release -> on ne montre rien
+            if (rel == null || !_updater.IsNewer(rel)) return;
+
+            _pendingRelease = rel;
+            UpdateText.Text = $"Nouvelle version {rel.Tag} disponible (actuelle : v{_updater.LocalVersion.ToString(3)}).";
+            UpdateBar.Visibility = Visibility.Visible;
+        }
+        catch { /* offline-safe: aucune erreur ne doit empecher d'utiliser l'app */ }
+    }
+
+    private async void UpdateNow_Click(object sender, RoutedEventArgs e)
+    {
+        if (_pendingRelease == null) return;
+        BtnUpdateNow.IsEnabled = false;
+        BtnUpdateLater.IsEnabled = false;
+        try
+        {
+            var progress = new Progress<double>(p =>
+                UpdateText.Text = $"Telechargement... {p * 100:0}%");
+            var newExe = await _updater.DownloadAndStageAsync(_pendingRelease, progress);
+            UpdateText.Text = "Redemarrage pour appliquer la mise a jour...";
+            _updater.ApplyAndRestart(newExe);   // ferme l'app, le .bat relais remplace l'exe et relance
+        }
+        catch (Exception ex)
+        {
+            UpdateText.Text = "Echec de la mise a jour : " + ex.Message;
+            BtnUpdateNow.IsEnabled = true;
+            BtnUpdateLater.IsEnabled = true;
+        }
+    }
+
+    private void UpdateLater_Click(object sender, RoutedEventArgs e)
+        => UpdateBar.Visibility = Visibility.Collapsed;
 
     private void Rail_Checked(object sender, RoutedEventArgs e)
     {
