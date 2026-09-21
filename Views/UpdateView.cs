@@ -94,7 +94,7 @@ public class UpdateView : UserControl
             _remoteVer.Text = $"{rel.Version.ToString(3)}  ({rel.Tag})";
             _notes.Text = string.IsNullOrWhiteSpace(rel.Notes) ? "(aucune note)" : rel.Notes;
 
-            if (_up.IsNewer(rel))
+            if (_up.ShouldOffer(rel))
             {
                 _pending = rel;
                 _install.IsEnabled = true;

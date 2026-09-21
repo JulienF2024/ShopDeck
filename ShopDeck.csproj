@@ -11,18 +11,24 @@
     <Company>Julien Forget</Company>
     <AssemblyTitle>ShopDeck</AssemblyTitle>
     <!-- version comparee au tag de la derniere GitHub Release pour l'auto-update -->
-    <Version>1.3.5</Version>
-    <AssemblyVersion>1.3.5.0</AssemblyVersion>
-    <FileVersion>1.3.5.0</FileVersion>
+    <Version>1.4.0</Version>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <FileVersion>1.4.0.0</FileVersion>
     <RootNamespace>ShopDeck</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>793f.ico</ApplicationIcon>
-    <!-- publish self-contained: le runtime .NET est dans l'exe, rien a installer sur les PC compagnie -->
+    <!-- self-contained: rien a installer sur les PC compagnie -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- DOSSIER par defaut (depuis 1.4.0). Le single-file non signe etait rescanne par l'EDR a chaque
+         chargement de DLL -> 10 min de boot sur PC compagnie. En dossier : DLL signees Microsoft, zero extraction.
+         `dotnet publish -p:SingleFileBridge=true` produit encore l'exe unique = asset PONT pour les clients <=1.3.5. -->
+    <SingleFileBridge Condition="'$(SingleFileBridge)' == ''">false</SingleFileBridge>
+    <PublishSingleFile>$(SingleFileBridge)</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>$(SingleFileBridge)</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>$(SingleFileBridge)</EnableCompressionInSingleFile>
+    <!-- pre-JIT: moins de compilation au boot, DLL un peu plus grosses -->
+    <PublishReadyToRun Condition="'$(SingleFileBridge)' != 'true'">true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>

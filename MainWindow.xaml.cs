@@ -48,10 +48,13 @@ public partial class MainWindow : Window
         {
             var rel = await _updater.CheckLatestAsync();
             // rel null = pas de reseau / GitHub injoignable / pas de release -> on ne montre rien
-            if (rel == null || !_updater.IsNewer(rel)) return;
+            if (rel == null || !_updater.ShouldOffer(rel)) return;
 
             _pendingRelease = rel;
-            UpdateText.Text = $"Nouvelle version {rel.Tag} disponible (actuelle : v{_updater.LocalVersion.ToString(3)}).";
+            // meme version mais encore en single-file : la conversion vers le dossier est LE fix du boot de 10 min
+            UpdateText.Text = _updater.IsFolderConversion(rel)
+                ? $"Optimisation disponible : version rapide (dossier) de {rel.Tag}. Recommande sur les PC compagnie."
+                : $"Nouvelle version {rel.Tag} disponible (actuelle : v{_updater.LocalVersion.ToString(3)}).";
             UpdateBar.Visibility = Visibility.Visible;
         }
         catch { /* offline-safe: aucune erreur ne doit empecher d'utiliser l'app */ }
