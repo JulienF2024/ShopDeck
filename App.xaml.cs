@@ -29,9 +29,11 @@ public partial class App : Application
         AppDir = Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory;
         DataDir = Path.Combine(AppDir, "data");
         Directory.CreateDirectory(DataDir);
+        StartupLog.Begin(DataDir);
 
         // trouve le dossier files en remontant (gere prod G:\app\ ET dev bin\Debug\...)
         FilesRoot = ResolveFilesRoot(AppDir);
+        StartupLog.Mark("paths:files");
 
         // Sumatra portable pour le viewer PDF embarque: on remonte chercher runtime\sumatra
         SumatraPath = ResolveRuntimeFile(AppDir, Path.Combine("sumatra", "SumatraPDF.exe"));
@@ -53,10 +55,13 @@ public partial class App : Application
             SumatraDataDir = Path.Combine(Path.GetDirectoryName(SumatraPath)!, "data");
             Directory.CreateDirectory(SumatraDataDir);
         }
+        StartupLog.Mark("paths:runtime");
 
         Database = new Db(Path.Combine(DataDir, "shopdeck.sqlite"));
         Database.Init();
+        StartupLog.Mark("db:init");
         Database.RelativizeLaunchers();   // ancienne DB avec chemins G:\ absolus -> relatifs, idempotent
+        StartupLog.Mark("db:relativize");
 
         // reimport si le json change: hash du contenu vs meta. Upsert idempotent -> pas de doublons.
         var fleetJson = Path.Combine(DataDir, "equipment_fleet.json");
@@ -70,6 +75,7 @@ public partial class App : Application
                 if (n > 0) Database.SetMeta("fleet_hash", hash);
             }
         }
+        StartupLog.Mark("fleet:hash/import");
     }
 
     private static string ResolveFilesRoot(string start)

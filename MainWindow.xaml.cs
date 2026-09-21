@@ -14,14 +14,18 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        StartupLog.Mark("mainwindow:ctor");
         InitializeComponent();
+        StartupLog.Mark("mainwindow:xaml");
         // version affichee dans le titre = meme source que l'updater (AssemblyVersion), donc toujours coherente
         Title = "ShopDeck v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "?");
         // le check tourne apres l'affichage de la fenetre: jamais bloquant, offline = ignore en silence
         Loaded += async (_, _) =>
         {
+            StartupLog.Mark("mainwindow:loaded");   // = fenetre visible pour l'utilisateur
             ShowWhatsNewIfUpdated();          // 100% local, avant tout appel reseau
             await CheckForUpdatesAsync();
+            StartupLog.Mark("update:check-done");
         };
     }
 
